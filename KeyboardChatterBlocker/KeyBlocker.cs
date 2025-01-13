@@ -91,7 +91,7 @@ namespace KeyboardChatterBlocker
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show($"Could not load stats file - delete 'blocker_stats.txt' to bypass this error:\n{ex}", "Failed to load stats", MessageBoxButtons.OK);
+                    MessageBox.Show($"Could not load stats file - delete 'blocker_stats.csv' to bypass this error:\n{ex}", "Failed to load stats", MessageBoxButtons.OK);
                     Program.Close();
                     return;
                 }
@@ -387,6 +387,13 @@ namespace KeyboardChatterBlocker
         public static Action PlayNotification = KBCUtils.GetSoundPlayer("chatter.wav");
 
         /// <summary>
+        /// Path of the stats data file from either local app data or the same directory as the executable
+        /// </summary>
+        private static readonly string BlockerStatsFilePath = Application.ExecutablePath.Contains("Program Files")
+            ? $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/KeyboardChatterBlocker/blocker_stats.csv"
+            : "./blocker_stats.csv";
+
+        /// <summary>
         /// Save stats data to file.
         /// </summary>
         public void SaveStatsToFile()
@@ -397,7 +404,7 @@ namespace KeyboardChatterBlocker
                 int chatterTotal = StatsKeyChatter[keyData.Key];
                 output.Append($"{keyData.Key.Stringify()},{keyData.Value},{chatterTotal},\n");
             }
-            File.WriteAllText("blocker_stats.csv", output.ToString());
+            File.WriteAllText(BlockerStatsFilePath, output.ToString());
         }
 
         /// <summary>
@@ -405,11 +412,11 @@ namespace KeyboardChatterBlocker
         /// </summary>
         public void LoadStatsFromFile()
         {
-            if (!File.Exists("blocker_stats.csv"))
+            if (!File.Exists(BlockerStatsFilePath))
             {
                 return;
             }
-            string[] lines = File.ReadAllText("blocker_stats.csv").Replace('\r', '\n').Split('\n');
+            string[] lines = File.ReadAllText(BlockerStatsFilePath).Replace('\r', '\n').Split('\n');
             foreach (string line in lines)
             {
                 if (string.IsNullOrWhiteSpace(line))
