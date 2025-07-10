@@ -66,6 +66,7 @@ I've taken a similar approach to the software solutions mentioned above, but wit
 - This only works in user-space. That is, the Windows login screen and other sensitive Windows protected input areas will not have chatter blocked. You might want to use a PIN or other login method to avoid chatter problems that affect a password login (see also [issue #7](https://github.com/FreneticLLC/KeyboardChatterBlocker/issues/7)).
 - You can add a list of programs that will cause the blocker to automatically disable when those programs are open. This is useful for example with games, as you often don't want rapid keystrokes blocked while gaming. This will be matched by executable name.
 - If you play online games, be careful that some anticheat software may block you for running this software, as it does control and alter keyboard input from software, which likely appears similar to cheat programs. See also [issue #15 which reports a VAC ban in CSGO from running KeyboardChatterBlocker](https://github.com/FreneticLLC/KeyboardChatterBlocker/issues/15).
+- If you use other keyboard software, there may be conflicts. For example, [Vietnamese keyboard software like EVKey and Unikey](https://github.com/FreneticLLC/KeyboardChatterBlocker/issues/55) send special control keycodes - the linked issue shows you can add `Packet` and `Back` as keys with zero chatter to prevent conflict. Other software may need the same or a similar trick.
 
 ## Config File Notes
 
