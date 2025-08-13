@@ -58,6 +58,21 @@ I've taken a similar approach to the software solutions mentioned above, but wit
 5. Check the "Enable", "Start In Tray", and "Start With Windows" boxes so it'll be active and just always be there.
 6. Click the "X" to close the window (the program will hide in the system tray for so long as "Start In Tray" is checked), and type happily with the program protecting you from chatter! If you need to adjust configuration, just go open the program in the tray and adjust freely. To stop the program from being in the way if you decide you don't need it anymore, just uncheck "Start In Tray" and "Start With Windows" ... once you close it after that, it will be gone until you specifically open it back up again.
 
+## Perfecting Your Settings
+
+While the default global threshold covers most cases out of the box, the best strategy for getting your blocker settings just right is easy:
+
+1. Set the `Global Chatter Threshold` to `0`.
+2. Identify which keys have chatter. Repeat the below steps once per each key.
+3. Go to the `Configure Keys` tab, click `Add Key`, add your specific key
+4. You will now have a line that looks something like `G    100    [X]` -- double-click the `100` under `Chatter Threshold` to edit the value. For now, set it to `300`
+5. Click the `Chatter Log` tab so we can monitor the keyboard chatter, leave this window open
+6. Open notepad or any app on the side, type a lot, using that key (don't just spam the key, type naturally).
+7. Look at your chatter log - we want to find the highest value, and round up a bit. Say for example your chatter is `52, 73, 64, 42`, the highest value is `73` but with that variance range we'll want to round up to `100` to be safe.
+8. Go back to `Configure Keys`, double click the value under `Chatter Threshold`, and set it to our selected value (`100` in this example). We want this value to be more than your chatter will ever be, but still low enough that you can't accidentally just type so fast it gets blocked.
+
+After following the above step by step, your blocking will exactly only cover your chatter and nothing more.
+
 ## General Notes
 
 - You can theoretically block any key on a keyboard that registers as a standard keypress. This includes weird special keys like a volume wheel. You might want to set volume wheels to threshold of zero if you have one. Extremely specialized keys (such as G Keys) might not be standard keypresses and thus not be blockable. If in doubt: try it and see!
