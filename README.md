@@ -9,6 +9,16 @@ Talk to us on Discord @ https://discord.gg/eggWVJt
 
 ---
 
+1. [Why This Exists / What It Is](#the-problem)
+1. [Screenshots](#screenshots)
+1. [Requirements](#requirements)
+1. [Setup](#setup)
+1. [Perfecting Your Settings](#perfecting-your-settings)
+1. [General Notes](#general-notes)
+1. [Raw Config File Editing Notes](#config-file-notes)
+1. [Other Features](#other-features)
+1. [License](#licensing-pre-note)
+
 ## The Problem
 
 Mechanical keyboards sometimes have a problem known as "chatter", wherein certain keys will seem to repeat keystrokes two or more times very rapidly when only pressed once.
