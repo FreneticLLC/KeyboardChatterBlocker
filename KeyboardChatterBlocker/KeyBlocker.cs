@@ -455,6 +455,10 @@ namespace KeyboardChatterBlocker
             {
                 return true;
             }
+            if (!ShouldBlockAll && !OtherKeyResetsTimeout && GlobalChatterTimeLimit == 0 && !KeysToChatterTime[key].HasValue) // Explicit no reason to listen to this key = discard fast, no tracking.
+            {
+                return true;
+            }
             AnyKeyChange = true;
             if (KeyIsDown[key]) // Key seems already down = key is being held, not chattering, so allow it.
             {
