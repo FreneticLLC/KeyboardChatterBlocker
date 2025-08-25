@@ -455,7 +455,8 @@ namespace KeyboardChatterBlocker
             {
                 return true;
             }
-            if (!ShouldBlockAll && !OtherKeyResetsTimeout && GlobalChatterTimeLimit == 0 && !KeysToChatterTime[key].HasValue) // Explicit no reason to listen to this key = discard fast, no tracking.
+            uint? chatterTimeLimit = KeysToChatterTime[key];
+            if (!ShouldBlockAll && !OtherKeyResetsTimeout && GlobalChatterTimeLimit == 0 && !chatterTimeLimit.HasValue) // Explicit no reason to listen to this key = discard fast, no tracking.
             {
                 return true;
             }
@@ -465,7 +466,10 @@ namespace KeyboardChatterBlocker
                 return true;
             }
             KeyIsDown[key] = true;
-            StatsKeyCount[key]++;
+            if (GlobalChatterTimeLimit != 0 || chatterTimeLimit.HasValue) // Only track stats if it's a monitored key.
+            {
+                StatsKeyCount[key]++;
+            }
             ulong timeNow = GetTickCount64();
             ulong timeLast = MeasureMode == MeasureFrom.Release ? KeysToLastReleaseTime[key] : KeysToLastPressTime[key];
             if (ShouldBlockAll)
@@ -487,7 +491,7 @@ namespace KeyboardChatterBlocker
                 KeysToLastPressTime[key] = timeNow;
                 return true;
             }
-            uint maxTime = KeysToChatterTime[key] ?? (defaultZero ? 0 : GlobalChatterTimeLimit);
+            uint maxTime = chatterTimeLimit ?? (defaultZero ? 0 : GlobalChatterTimeLimit);
             ulong timePassed = unchecked(timeNow - timeLast); // unchecked means if time runs backwards it will wrap to super large and be ignored
             if (timePassed >= maxTime // Time past the chatter limit = enough delay passed, allow it.
                 || timePassed < MinimumChatterTime) // Or too fast (below user configured minimum) = possible bug or similar oddity, allow it.
