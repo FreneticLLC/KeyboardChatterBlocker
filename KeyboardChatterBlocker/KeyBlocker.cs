@@ -16,7 +16,7 @@ namespace KeyboardChatterBlocker
         /// <summary>
         /// Folder path where config and related files will be stored.
         /// </summary>
-        public static readonly string ConfigFolder = Application.ExecutablePath.Contains("Program Files") ? $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/KeyboardChatterBlocker" : ".";
+        public static readonly string ConfigFolder = Application.ExecutablePath.Contains("Program Files") ? $"{Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData)}/KeyboardChatterBlocker" : Path.GetDirectoryName(Application.ExecutablePath);
 
         /// <summary>
         /// Location of the config file.
