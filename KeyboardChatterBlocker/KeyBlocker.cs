@@ -224,7 +224,8 @@ namespace KeyboardChatterBlocker
         /// <summary>
         /// Saves the configuration data to file.
         /// </summary>
-        public void SaveConfig()
+        /// <param name="shouldVerify">If true, the user directly triggered a save, and a failure should ask the user to check. If false, this is a background save.</param>
+        public void SaveConfig(bool shouldVerify = false)
         {
             AutoEnableMouse();
             string saveStr = GetConfigurationString();
@@ -232,7 +233,7 @@ namespace KeyboardChatterBlocker
             File.WriteAllText(CONFIG_FILE, saveStr);
             if (SaveStats)
             {
-                SaveStatsToFile();
+                SaveStatsToFile(shouldVerify);
             }
         }
 
@@ -403,7 +404,8 @@ namespace KeyboardChatterBlocker
         /// <summary>
         /// Save stats data to file.
         /// </summary>
-        public void SaveStatsToFile()
+        /// <param name="shouldVerify">If true, the user directly triggered a save, and a failure should ask the user to check. If false, this is a background save.</param>
+        public void SaveStatsToFile(bool shouldVerify)
         {
             StringBuilder output = new StringBuilder();
             foreach (KeyValuePair<Keys, int> keyData in StatsKeyCount.MainDictionary)
@@ -411,7 +413,27 @@ namespace KeyboardChatterBlocker
                 int chatterTotal = StatsKeyChatter[keyData.Key];
                 output.Append($"{keyData.Key.Stringify()},{keyData.Value},{chatterTotal},\n");
             }
-            File.WriteAllText(BlockerStatsFilePath, output.ToString());
+            try
+            {
+                File.WriteAllText(BlockerStatsFilePath, output.ToString());
+            }
+            catch (Exception ex)
+            {
+                if (!shouldVerify)
+                {
+                    return;
+                }
+                Console.WriteLine($"Stats failed to save: {ex}");
+                MessageBox.Show($"Could not save stats file: is the data folder invalid, or have you opened the CSV in locking software?\nClose any locks before pressing OK to retry.", "Failed to save stats", MessageBoxButtons.OK);
+                try
+                {
+                    File.WriteAllText(BlockerStatsFilePath, output.ToString());
+                }
+                catch (Exception)
+                {
+                    // Ignore second failure
+                }
+            }
         }
 
         /// <summary>

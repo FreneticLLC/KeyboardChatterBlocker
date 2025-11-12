@@ -361,7 +361,7 @@ namespace KeyboardChatterBlocker
                 Program.Blocker.SaveStatsTicker++;
                 if (Program.Blocker.SaveStatsTicker > 60 * 30)
                 {
-                    Program.Blocker.SaveStatsToFile();
+                    Program.Blocker.SaveStatsToFile(false);
                 }
             }
         }
@@ -376,7 +376,7 @@ namespace KeyboardChatterBlocker
         /// </summary>
         public void MainBlockerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
-            Program.Blocker.SaveConfig();
+            Program.Blocker.SaveConfig(e.CloseReason == CloseReason.UserClosing);
             if (ShouldForceClose)
             {
                 return;
