@@ -68,6 +68,7 @@
             this.AddProgramTextBox = new System.Windows.Forms.TextBox();
             this.otherSettingsTabPage = new System.Windows.Forms.TabPage();
             this.SaveStatsCheckbox = new System.Windows.Forms.CheckBox();
+            this.SaveChatterLogCheckbox = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.MeasureFromComboBox = new System.Windows.Forms.ComboBox();
             this.OtherKeyResetsCheckbox = new System.Windows.Forms.CheckBox();
@@ -492,6 +493,7 @@
             // 
             // otherSettingsTabPage
             // 
+            this.otherSettingsTabPage.Controls.Add(this.SaveChatterLogCheckbox);
             this.otherSettingsTabPage.Controls.Add(this.ExcludeInjectedCheckbox);
             this.otherSettingsTabPage.Controls.Add(this.SaveStatsCheckbox);
             this.otherSettingsTabPage.Controls.Add(this.label1);
@@ -515,6 +517,18 @@
             this.SaveStatsCheckbox.Text = "Save Persistent Stats";
             this.SaveStatsCheckbox.UseVisualStyleBackColor = true;
             this.SaveStatsCheckbox.CheckedChanged += new System.EventHandler(this.SaveStatsCheckbox_CheckedChanged);
+            // 
+            // SaveChatterLogCheckbox
+            // 
+            this.SaveChatterLogCheckbox.AutoSize = true;
+            this.SaveChatterLogCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.SaveChatterLogCheckbox.Location = new System.Drawing.Point(99, 74);
+            this.SaveChatterLogCheckbox.Name = "SaveChatterLogCheckbox";
+            this.SaveChatterLogCheckbox.Size = new System.Drawing.Size(109, 17);
+            this.SaveChatterLogCheckbox.TabIndex = 4;
+            this.SaveChatterLogCheckbox.Text = "Save Chatter Log";
+            this.SaveChatterLogCheckbox.UseVisualStyleBackColor = true;
+            this.SaveChatterLogCheckbox.CheckedChanged += new System.EventHandler(this.SaveChatterLogCheckbox_CheckedChanged);
             // 
             // label1
             // 
@@ -652,10 +666,10 @@
             // 
             this.ExcludeInjectedCheckbox.AutoSize = true;
             this.ExcludeInjectedCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.ExcludeInjectedCheckbox.Location = new System.Drawing.Point(103, 74);
+            this.ExcludeInjectedCheckbox.Location = new System.Drawing.Point(103, 97);
             this.ExcludeInjectedCheckbox.Name = "ExcludeInjectedCheckbox";
             this.ExcludeInjectedCheckbox.Size = new System.Drawing.Size(105, 17);
-            this.ExcludeInjectedCheckbox.TabIndex = 4;
+            this.ExcludeInjectedCheckbox.TabIndex = 5;
             this.ExcludeInjectedCheckbox.Text = "Exclude Injected";
             this.ExcludeInjectedCheckbox.UseVisualStyleBackColor = true;
             this.ExcludeInjectedCheckbox.CheckedChanged += new System.EventHandler(this.ExcludeInjectedCheckbox_CheckedChanged);
@@ -751,6 +765,7 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.ComboBox MeasureFromComboBox;
         private System.Windows.Forms.CheckBox SaveStatsCheckbox;
+        private System.Windows.Forms.CheckBox SaveChatterLogCheckbox;
         private System.Windows.Forms.CheckBox ExcludeInjectedCheckbox;
     }
 }
