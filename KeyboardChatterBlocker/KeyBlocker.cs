@@ -223,6 +223,9 @@ namespace KeyboardChatterBlocker
                 case "save_stats":
                     SaveStats = SettingAsBool(settingValue);
                     break;
+                case "save_chatter_log":
+                    SaveChatterLog = SettingAsBool(settingValue);
+                    break;
                 case "exclude_injected":
                     ExcludeInjected = SettingAsBool(settingValue);
                     break;
@@ -264,6 +267,10 @@ namespace KeyboardChatterBlocker
             if (SaveStats)
             {
                 result.Append($"save_stats: true\n");
+            }
+            if (SaveChatterLog)
+            {
+                result.Append("save_chatter_log: true\n");
             }
             result.Append($"measure_from: {MeasureMode}\n");
             result.Append($"minimum_chatter_time: {MinimumChatterTime}\n");
@@ -391,6 +398,11 @@ namespace KeyboardChatterBlocker
         public int SaveStatsTicker = 0;
 
         /// <summary>
+        /// If true, save the chatter log to file.
+        /// </summary>
+        public bool SaveChatterLog = false;
+
+        /// <summary>
         /// Whether any key presses have occurred (and thus stats have changed).
         /// </summary>
         public bool AnyKeyChange = false;
@@ -409,6 +421,11 @@ namespace KeyboardChatterBlocker
         /// Path of the stats data file from either local app data or the same directory as the executable
         /// </summary>
         private static readonly string BlockerStatsFilePath = $"{ConfigFolder}/blocker_stats.csv";
+
+        /// <summary>
+        /// Path of the chatter log data file, in the same folder as the config file.
+        /// </summary>
+        public static readonly string ChatterLogFilePath = $"{ConfigFolder}/chatter_log.csv";
 
         /// <summary>
         /// Save stats data to file.

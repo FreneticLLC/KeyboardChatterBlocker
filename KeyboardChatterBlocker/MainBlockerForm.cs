@@ -29,6 +29,11 @@ namespace KeyboardChatterBlocker
         public Timer StatsUpdateTimer;
 
         /// <summary>
+        /// Chatter log lines waiting to be appended to the chatter log file by <see cref="SaveChatterLogToFile"/>.
+        /// </summary>
+        public List<string> PendingChatterLogLines = new List<string>();
+
+        /// <summary>
         /// Whether the form is currently hidden from view.
         /// </summary>
         public bool IsHidden => !Visible;
@@ -114,12 +119,128 @@ namespace KeyboardChatterBlocker
         /// <param name="e">The key blocked event details.</param>
         public void LogKeyBlocked(KeyBlockedEventArgs e)
         {
+            DateTime now = DateTime.Now;
             bool wasScrolledToBottom = ChatterLogGrid.FirstDisplayedScrollingRowIndex + ChatterLogGrid.DisplayedRowCount(true) >= ChatterLogGrid.RowCount;
-            ChatterLogGrid.Rows.Add(DateTime.Now.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture), KeysHelper.Stringify(e.Key), e.Time, "[Edit]");
+            ChatterLogGrid.Rows.Add(now.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture), KeysHelper.Stringify(e.Key), e.Time, "[Edit]");
             if (wasScrolledToBottom)
             {
                 ChatterLogGrid.FirstDisplayedScrollingRowIndex = ChatterLogGrid.RowCount - 1;
             }
+            if (Program.Blocker.SaveChatterLog)
+            {
+                string keyText = KeysHelper.Stringify(e.Key);
+                keyText = keyText.Contains(",") ? $"\"{keyText}\"" : keyText;
+                PendingChatterLogLines.Add($"{now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)},{keyText},{e.Time}");
+            }
+        }
+
+        /// <summary>
+        /// The maximum number of lines to keep in the chatter log file. Older lines are trimmed off at startup.
+        /// </summary>
+        public int ChatterLogMaxLines = 5000;
+
+        /// <summary>
+        /// Seconds per chatter log save (at most - less frequent if there's no recent chatter).
+        /// </summary>
+        public int ChatterLogSaveRate = 30;
+
+        /// <summary>
+        /// Seconds left before retrying a failed chatter log file write, counted down by <see cref="StatsUpdateTimer_Tick"/>.
+        /// </summary>
+        public volatile int ChatterLogSaveCountdown = 5;
+
+        /// <summary>
+        /// Loads the most recent chatter log file entries into the chatter log, and trims the file if it has grown too long.
+        /// </summary>
+        public void LoadChatterLogFromFile()
+        {
+            string[] lines;
+            try
+            {
+                lines = File.ReadAllLines(KeyBlocker.ChatterLogFilePath);
+            }
+            catch (Exception)
+            {
+                return;
+            }
+            if (lines.Length > ChatterLogMaxLines)
+            {
+                lines = lines.Skip(lines.Length - ChatterLogMaxLines).ToArray();
+                string tempPath = $"{KeyBlocker.ChatterLogFilePath}.tmp";
+                try
+                {
+                    File.WriteAllLines(tempPath, lines);
+                    File.Replace(tempPath, KeyBlocker.ChatterLogFilePath, null);
+                }
+                catch (Exception)
+                {
+                    try
+                    {
+                        if (File.Exists(tempPath))
+                        {
+                            File.Delete(tempPath);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // Ignore
+                    }
+                }
+            }
+            foreach (string line in lines.Skip(Math.Max(0, lines.Length - 500)))
+            {
+                // TODO: csv parsing is a bit hacky here
+                int firstComma = line.IndexOf(',');
+                int lastComma = line.LastIndexOf(',');
+                if (firstComma == -1 || lastComma <= firstComma
+                    || !DateTime.TryParseExact(line.Substring(0, firstComma), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time)
+                    || !KeysHelper.TryGetKey(line.Substring(firstComma + 1, lastComma - firstComma - 1).Trim('"'), out Keys key)
+                    || (int)key < 0
+                    || !uint.TryParse(line.Substring(lastComma + 1), out uint chatterTime))
+                {
+                    continue;
+                }
+                ChatterLogGrid.Rows.Add(time.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture), key.Stringify(), chatterTime, "[Edit]");
+            }
+            if (ChatterLogGrid.RowCount > 0)
+            {
+                ChatterLogGrid.FirstDisplayedScrollingRowIndex = ChatterLogGrid.RowCount - 1;
+            }
+        }
+
+        /// <summary>
+        /// Appends any pending lines to the chatter log file.
+        /// If writing fails (eg the file is open in locking software), the lines are kept to retry on a later call.
+        /// </summary>
+        /// <returns>False if writing failed.</returns>
+        public void SaveChatterLogToFile()
+        {
+            ChatterLogSaveCountdown = ChatterLogSaveRate;
+            if (PendingChatterLogLines.Count == 0)
+            {
+                return;
+            }
+            if (PendingChatterLogLines.Count > ChatterLogMaxLines)
+            {
+                PendingChatterLogLines.RemoveRange(0, PendingChatterLogLines.Count - ChatterLogMaxLines);
+            }
+            List<string> toWrite = new List<string>(PendingChatterLogLines);
+            PendingChatterLogLines.Clear();
+            Task.Factory.StartNew(() =>
+            {
+                try
+                {
+                    File.AppendAllLines(KeyBlocker.ChatterLogFilePath, toWrite);
+                }
+                catch (Exception)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        toWrite.AddRange(PendingChatterLogLines);
+                        PendingChatterLogLines = toWrite;
+                    }));
+                }
+            });
         }
 
         /// <summary>
@@ -333,6 +454,7 @@ namespace KeyboardChatterBlocker
             MeasureFromComboBox.Text = Program.Blocker.MeasureMode.ToString();
             EnabledCheckbox.Checked = Program.Blocker.IsEnabled;
             SaveStatsCheckbox.Checked = Program.Blocker.SaveStats;
+            SaveChatterLogCheckbox.Checked = Program.Blocker.SaveChatterLog;
             StartWithWindowsCheckbox.Checked = File.Exists(StartupLinkPath);
             OtherKeyResetsCheckbox.Checked = Program.Blocker.OtherKeyResetsTimeout;
             ExcludeInjectedCheckbox.Checked = Program.Blocker.ExcludeInjected;
@@ -340,6 +462,10 @@ namespace KeyboardChatterBlocker
             StatsUpdateTimer.Tick += StatsUpdateTimer_Tick;
             StatsUpdateTimer.Start();
             PushKeysToGrid();
+            if (Program.Blocker.SaveChatterLog)
+            {
+                LoadChatterLogFromFile();
+            }
             Loading = false;
             CheckAutoDisable();
         }
@@ -370,6 +496,14 @@ namespace KeyboardChatterBlocker
                     Program.Blocker.SaveStatsToFile(false);
                 }
             }
+            if (ChatterLogSaveCountdown > 0)
+            {
+                ChatterLogSaveCountdown--;
+            }
+            else
+            {
+                SaveChatterLogToFile();
+            }
         }
 
         /// <summary>
@@ -383,6 +517,7 @@ namespace KeyboardChatterBlocker
         public void MainBlockerForm_FormClosing(object sender, FormClosingEventArgs e)
         {
             Program.Blocker.SaveConfig(e.CloseReason == CloseReason.UserClosing);
+            SaveChatterLogToFile();
             if (ShouldForceClose)
             {
                 return;
@@ -766,6 +901,23 @@ namespace KeyboardChatterBlocker
         private void ExcludeInjectedCheckbox_CheckedChanged(object sender, EventArgs e)
         {
             Program.Blocker.ExcludeInjected = ExcludeInjectedCheckbox.Checked;
+            Program.Blocker.SaveConfig();
+        }
+
+        /// <summary>
+        /// Event method to handle the 'save chatter log' checkbox state changing.
+        /// </summary>
+        private void SaveChatterLogCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (Loading)
+            {
+                return;
+            }
+            Program.Blocker.SaveChatterLog = SaveChatterLogCheckbox.Checked;
+            if (!SaveChatterLogCheckbox.Checked)
+            {
+                PendingChatterLogLines.Clear();
+            }
             Program.Blocker.SaveConfig();
         }
     }
