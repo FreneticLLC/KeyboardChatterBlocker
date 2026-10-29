@@ -59,6 +59,11 @@ namespace KeyboardChatterBlocker
         public bool TempDisable = false;
 
         /// <summary>
+        /// Whether to exclude keyboard events that look like they were injected.
+        /// </summary>
+        public bool ExcludeInjected = false;
+
+        /// <summary>
         /// Load the <see cref="KeyBlocker"/> from config file settings.
         /// </summary>
         public KeyBlocker()
@@ -221,6 +226,12 @@ namespace KeyboardChatterBlocker
                 case "save_stats":
                     SaveStats = SettingAsBool(settingValue);
                     break;
+                case "save_chatter_log":
+                    SaveChatterLog = SettingAsBool(settingValue);
+                    break;
+                case "exclude_injected":
+                    ExcludeInjected = SettingAsBool(settingValue);
+                    break;
             }
         }
 
@@ -260,6 +271,10 @@ namespace KeyboardChatterBlocker
             {
                 result.Append($"save_stats: true\n");
             }
+            if (SaveChatterLog)
+            {
+                result.Append("save_chatter_log: true\n");
+            }
             result.Append($"measure_from: {MeasureMode}\n");
             result.Append($"minimum_chatter_time: {MinimumChatterTime}\n");
             result.Append("\n");
@@ -278,6 +293,7 @@ namespace KeyboardChatterBlocker
             result.Append("auto_disable_on_fullscreen: ").Append(AutoDisableOnFullscreen ? "true" : "false").Append("\n");
             result.Append("disable_only_on_focus: ").Append(DisableOnlyIfFocus ? "true" : "false").Append("\n");
             result.Append("other_key_resets_timeout: ").Append(OtherKeyResetsTimeout ? "true" : "false").Append("\n");
+            result.Append("exclude_injected: ").Append(ExcludeInjected ? "true" : "false").Append("\n");
             result.Append("\n");
             foreach (KeyValuePair<string, string> pair in Hotkeys)
             {
@@ -391,6 +407,11 @@ namespace KeyboardChatterBlocker
         public int SaveStatsTicker = 0;
 
         /// <summary>
+        /// If true, save the chatter log to file.
+        /// </summary>
+        public bool SaveChatterLog = false;
+
+        /// <summary>
         /// Whether any key presses have occurred (and thus stats have changed).
         /// </summary>
         public bool AnyKeyChange = false;
@@ -409,6 +430,11 @@ namespace KeyboardChatterBlocker
         /// Path of the stats data file from either local app data or the same directory as the executable
         /// </summary>
         private static readonly string BlockerStatsFilePath = $"{ConfigFolder}/blocker_stats.csv";
+
+        /// <summary>
+        /// Path of the chatter log data file, in the same folder as the config file.
+        /// </summary>
+        public static readonly string ChatterLogFilePath = $"{ConfigFolder}/chatter_log.csv";
 
         /// <summary>
         /// Save stats data to file.

@@ -115,6 +115,8 @@ After following the above step by step, your blocking will exactly only cover yo
 - `measure_from` set to `Press` or `Release` (defaults to `Press`) to choose when to measure chatter delay from - the last key press, or last key release.
 - `disable_tray_icon`: set to `true` to prevent the tray icon from appearing, even when "hidden to tray". The only way to bring the form up will be enabling `hotkey_showform` and pressing that key.
 - `save_stats`: set to `true` to save a persistent stats file to retain stat data over longer periods.
+- `save_chatter_log`: set to `true` to save the chatter log to `chatter_log.csv` (in the same folder as the config file), so blocked key presses are kept across restarts. At startup, the latest 500 entries are reloaded into the Chatter Log tab, and the file is trimmed to its latest 5000 lines.
+- `exclude_injected`: set to `true` to automatically ignore keyboard events that look like they were injected (based on KBDLLHOOKSTRUCT's LLKHF flags).
 
 ## Other Features
 
@@ -137,7 +139,7 @@ You can do basically whatever you want (as long as you give credit), except you 
 The MIT License (MIT)
 
 Copyright (c) 2019-2024 Alex "mcmonkey" Goodwin
-Copyright (c) 2024-2025 Frenetic LLC
+Copyright (c) 2024-2026 Frenetic LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
