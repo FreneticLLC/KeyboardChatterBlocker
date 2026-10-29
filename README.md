@@ -103,6 +103,7 @@ After following the above step by step, your blocking will exactly only cover yo
 - `key.<KEY>`: (for example, `key.H`) set to the time (in ms) for that specific key's keyboard chatter threshold.
 - `auto_disable_programs`: Set to a list of executable names (case insensitive, without the `.exe`) separated by slashes (like `some_video_game/other_game`) that will cause the chatter block to automatically disable whenever that program is open.
 - `auto_disable_on_fullscreen`: set to `true` to auto-disable the chatter block when any application is open in fullscreen - see also [#26](https://github.com/FreneticLLC/KeyboardChatterBlocker/issues/26). This prevents interrupting controls in games, but won't be perfect for preventing online game bans (eg if you alt-tab it will hook the keyboard again and some game anticheats may detect that).
+- `disable_only_on_focus`: Set to `true` to only apply auto-disable programs if the given program is currently focused (ignoring background processes).
 - `hotkey_toggle`, `hotkey_enable`, `hotkey_disable`, `hotkey_tempenable`, `hotkey_tempdisable`, `hotkey_showform`: set to a key combo.
     - Must be a combination of any of `control`, `alt`, `win`, `shift`, and any valid key separated by `+`.
     - For example `control + a`, `win + alt + b`, `shift + d1`.

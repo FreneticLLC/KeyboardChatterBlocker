@@ -10,6 +10,7 @@ using System.Windows.Forms;
 using System.Diagnostics;
 using System.IO;
 using System.Globalization;
+using System.Runtime.InteropServices;
 
 namespace KeyboardChatterBlocker
 {
@@ -398,7 +399,16 @@ namespace KeyboardChatterBlocker
                 return;
             }
             bool any = false;
-            foreach (string proc in Process.GetProcesses().Select(p => p.ProcessName.ToLowerInvariant()))
+            IEnumerable<string> processes;
+            if (Program.Blocker.DisableOnlyIfFocus)
+            {
+                processes = new string[] { GetActiveProcessName().ToLowerInvariant() };
+            }
+            else
+            {
+                processes = Process.GetProcesses().Select(p => p.ProcessName.ToLowerInvariant());
+            }
+            foreach (string proc in processes)
             {
                 if (programsToCheck.Contains(proc))
                 {
@@ -450,6 +460,7 @@ namespace KeyboardChatterBlocker
             AutoDisableTimer.Start();
             AutoDisableProgramsList.Items.AddRange(Program.Blocker.AutoDisablePrograms.Select(s => new ListViewItem(s)).ToArray());
             AutoDisableOnFullscreenCheckbox.Checked = Program.Blocker.AutoDisableOnFullscreen;
+            DisableOnFocusCheckbox.Checked = Program.Blocker.DisableOnlyIfFocus;
             ChatterThresholdBox.Value = Program.Blocker.GlobalChatterTimeLimit;
             MeasureFromComboBox.Text = Program.Blocker.MeasureMode.ToString();
             EnabledCheckbox.Checked = Program.Blocker.IsEnabled;
@@ -503,6 +514,42 @@ namespace KeyboardChatterBlocker
             else
             {
                 SaveChatterLogToFile();
+            }
+        }
+
+        /// <summary>
+        /// Windows syscall to get the current foreground window.
+        /// </summary>
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern IntPtr GetForegroundWindow();
+
+        /// <summary>
+        /// Windows syscall to get the process ID associated with a window handle.
+        /// </summary>
+        [DllImport("user32.dll", CharSet = CharSet.Auto, SetLastError = true)]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint lpdwProcessId);
+
+        /// <summary>
+        /// Gets the ProcessName for the active foreground (focused) window.
+        /// </summary>
+        public static string GetActiveProcessName()
+        {
+            IntPtr hwnd = GetForegroundWindow();
+            if (hwnd == IntPtr.Zero)
+            {
+                return "none";
+            }
+            GetWindowThreadProcessId(hwnd, out uint pid);
+            try
+            {
+                using (Process p = Process.GetProcessById((int)pid))
+                {
+                    return p.ProcessName.ToLowerInvariant();
+                }
+            }
+            catch (Exception)
+            {
+                return "unknown";
             }
         }
 
@@ -863,6 +910,19 @@ namespace KeyboardChatterBlocker
                 return;
             }
             Program.Blocker.AutoDisableOnFullscreen = AutoDisableOnFullscreenCheckbox.Checked;
+            Program.Blocker.SaveConfig();
+        }
+
+        /// <summary>
+        /// Event method to handle the 'auto disable on fullscreen' checkbox state changing.
+        /// </summary>
+        private void DisableOnFocusCheckbox_CheckedChanged(object sender, EventArgs e)
+        {
+            if (Loading)
+            {
+                return;
+            }
+            Program.Blocker.DisableOnlyIfFocus = DisableOnFocusCheckbox.Checked;
             Program.Blocker.SaveConfig();
         }
 

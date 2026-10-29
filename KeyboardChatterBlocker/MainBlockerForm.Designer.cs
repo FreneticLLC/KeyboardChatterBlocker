@@ -82,6 +82,7 @@
             this.AboutLabel1 = new System.Windows.Forms.Label();
             this.EnableNoteLabel = new System.Windows.Forms.Label();
             this.ExcludeInjectedCheckbox = new System.Windows.Forms.CheckBox();
+            this.DisableOnFocusCheckbox = new System.Windows.Forms.CheckBox();
             ((System.ComponentModel.ISupportInitialize)(this.ChatterLogGrid)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.ChatterThresholdBox)).BeginInit();
             this.TrayIconContextMenu.SuspendLayout();
@@ -404,6 +405,7 @@
             // 
             // AutoDisableProgramsTabPage
             // 
+            this.AutoDisableProgramsTabPage.Controls.Add(this.DisableOnFocusCheckbox);
             this.AutoDisableProgramsTabPage.Controls.Add(this.AutoDisableOnFullscreenCheckbox);
             this.AutoDisableProgramsTabPage.Controls.Add(this.AutoDisableProgramsList);
             this.AutoDisableProgramsTabPage.Controls.Add(this.RemoveProgramButton);
@@ -490,6 +492,18 @@
             this.AddProgramTextBox.TextChanged += new System.EventHandler(this.AddProgramTextBox_TextChanged);
             this.AddProgramTextBox.Enter += new System.EventHandler(this.AddProgramTextBox_Enter);
             this.AddProgramTextBox.Leave += new System.EventHandler(this.AddProgramTextBox_Leave);
+            // 
+            // DisableOnFocusCheckbox
+            // 
+            this.DisableOnFocusCheckbox.AutoSize = true;
+            this.DisableOnFocusCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.DisableOnFocusCheckbox.Location = new System.Drawing.Point(8, 5);
+            this.DisableOnFocusCheckbox.Name = "DisableOnFocusCheckbox";
+            this.DisableOnFocusCheckbox.Size = new System.Drawing.Size(132, 17);
+            this.DisableOnFocusCheckbox.TabIndex = 7;
+            this.DisableOnFocusCheckbox.Text = "Disable only if focused";
+            this.DisableOnFocusCheckbox.UseVisualStyleBackColor = true;
+            this.DisableOnFocusCheckbox.CheckedChanged += new System.EventHandler(this.DisableOnFocusCheckbox_CheckedChanged);
             // 
             // otherSettingsTabPage
             // 
@@ -767,6 +781,7 @@
         private System.Windows.Forms.CheckBox SaveStatsCheckbox;
         private System.Windows.Forms.CheckBox SaveChatterLogCheckbox;
         private System.Windows.Forms.CheckBox ExcludeInjectedCheckbox;
+        private System.Windows.Forms.CheckBox DisableOnFocusCheckbox;
     }
 }
 
