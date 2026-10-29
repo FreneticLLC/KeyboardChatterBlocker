@@ -126,10 +126,10 @@ namespace KeyboardChatterBlocker
             {
                 ChatterLogGrid.FirstDisplayedScrollingRowIndex = ChatterLogGrid.RowCount - 1;
             }
-            if (Program.Blocker.SaveChatterLog) // Only queue the line here, as this runs inside the keyboard hook. The file is written by StatsUpdateTimer_Tick.
+            if (Program.Blocker.SaveChatterLog)
             {
                 string keyText = KeysHelper.Stringify(e.Key);
-                keyText = keyText.Contains(",") ? $"\"{keyText}\"" : keyText; // Quote key names that contain commas (eg 'LButton, OemClear'), so CSV readers keep them in one column
+                keyText = keyText.Contains(",") ? $"\"{keyText}\"" : keyText;
                 PendingChatterLogLines.Add($"{now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)},{keyText},{e.Time}");
             }
         }
@@ -137,16 +137,20 @@ namespace KeyboardChatterBlocker
         /// <summary>
         /// The maximum number of lines to keep in the chatter log file. Older lines are trimmed off at startup.
         /// </summary>
-        public const int CHATTER_LOG_MAX_LINES = 5000;
+        public int ChatterLogMaxLines = 5000;
+
+        /// <summary>
+        /// Seconds per chatter log save (at most - less frequent if there's no recent chatter).
+        /// </summary>
+        public int ChatterLogSaveRate = 30;
 
         /// <summary>
         /// Seconds left before retrying a failed chatter log file write, counted down by <see cref="StatsUpdateTimer_Tick"/>.
         /// </summary>
-        public int ChatterLogRetryCountdown = 0;
+        public volatile int ChatterLogSaveCountdown = 5;
 
         /// <summary>
         /// Loads the most recent chatter log file entries into the chatter log, and trims the file if it has grown too long.
-        /// A missing, locked, or malformed file is skipped rather than treated as an error, as the log is not essential.
         /// </summary>
         public void LoadChatterLogFromFile()
         {
@@ -157,12 +161,11 @@ namespace KeyboardChatterBlocker
             }
             catch (Exception)
             {
-                return; // Missing (nothing saved yet) or locked
+                return;
             }
-            if (lines.Length > CHATTER_LOG_MAX_LINES)
+            if (lines.Length > ChatterLogMaxLines)
             {
-                lines = lines.Skip(lines.Length - CHATTER_LOG_MAX_LINES).ToArray();
-                // Write the trimmed log to a temp file and swap it in, so a failure partway through can't lose the existing log
+                lines = lines.Skip(lines.Length - ChatterLogMaxLines).ToArray();
                 string tempPath = $"{KeyBlocker.ChatterLogFilePath}.tmp";
                 try
                 {
@@ -171,33 +174,28 @@ namespace KeyboardChatterBlocker
                 }
                 catch (Exception)
                 {
-                    // Ignore, will try again next startup
                     try
                     {
-                        if (File.Exists(KeyBlocker.ChatterLogFilePath))
+                        if (File.Exists(tempPath))
                         {
                             File.Delete(tempPath);
-                        }
-                        else
-                        {
-                            File.Move(tempPath, KeyBlocker.ChatterLogFilePath); // A replace can fail after Windows has already removed the original, so keep the trimmed copy rather than lose both
                         }
                     }
                     catch (Exception)
                     {
-                        // Ignore, the next trim overwrites it
+                        // Ignore
                     }
                 }
             }
-            foreach (string line in lines.Skip(Math.Max(0, lines.Length - 500))) // Only the latest 500 entries are shown
+            foreach (string line in lines.Skip(Math.Max(0, lines.Length - 500)))
             {
-                // Key names can contain commas (eg 'LButton, OemClear', saved in quotes), so split at the first and last comma only.
+                // TODO: csv parsing is a bit hacky here
                 int firstComma = line.IndexOf(',');
                 int lastComma = line.LastIndexOf(',');
-                if (firstComma == -1 || lastComma == firstComma
+                if (firstComma == -1 || lastComma <= firstComma
                     || !DateTime.TryParseExact(line.Substring(0, firstComma), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time)
                     || !KeysHelper.TryGetKey(line.Substring(firstComma + 1, lastComma - firstComma - 1).Trim('"'), out Keys key)
-                    || (int)key < 0 // Numeric key text parses to any value, but negative ones can't come from real input and break the key maps
+                    || (int)key < 0
                     || !uint.TryParse(line.Substring(lastComma + 1), out uint chatterTime))
                 {
                     continue;
@@ -206,14 +204,7 @@ namespace KeyboardChatterBlocker
             }
             if (ChatterLogGrid.RowCount > 0)
             {
-                try
-                {
-                    ChatterLogGrid.FirstDisplayedScrollingRowIndex = ChatterLogGrid.RowCount - 1;
-                }
-                catch (InvalidOperationException)
-                {
-                    // Throws if the grid has no room to display rows yet, scrolling isn't worth failing startup over
-                }
+                ChatterLogGrid.FirstDisplayedScrollingRowIndex = ChatterLogGrid.RowCount - 1;
             }
         }
 
@@ -222,26 +213,34 @@ namespace KeyboardChatterBlocker
         /// If writing fails (eg the file is open in locking software), the lines are kept to retry on a later call.
         /// </summary>
         /// <returns>False if writing failed.</returns>
-        public bool SaveChatterLogToFile()
+        public void SaveChatterLogToFile()
         {
+            ChatterLogSaveCountdown = ChatterLogSaveRate;
             if (PendingChatterLogLines.Count == 0)
             {
-                return true;
+                return;
             }
-            if (PendingChatterLogLines.Count > CHATTER_LOG_MAX_LINES) // Only reachable if writes keep failing. The file gets trimmed to this many lines anyway, so drop the oldest.
+            if (PendingChatterLogLines.Count > ChatterLogMaxLines)
             {
-                PendingChatterLogLines.RemoveRange(0, PendingChatterLogLines.Count - CHATTER_LOG_MAX_LINES);
+                PendingChatterLogLines.RemoveRange(0, PendingChatterLogLines.Count - ChatterLogMaxLines);
             }
-            try
+            List<string> toWrite = new List<string>(PendingChatterLogLines);
+            PendingChatterLogLines.Clear();
+            Task.Factory.StartNew(() =>
             {
-                File.AppendAllLines(KeyBlocker.ChatterLogFilePath, PendingChatterLogLines);
-                PendingChatterLogLines.Clear();
-                return true;
-            }
-            catch (Exception)
-            {
-                return false;
-            }
+                try
+                {
+                    File.AppendAllLines(KeyBlocker.ChatterLogFilePath, toWrite);
+                }
+                catch (Exception)
+                {
+                    BeginInvoke(new Action(() =>
+                    {
+                        toWrite.AddRange(PendingChatterLogLines);
+                        PendingChatterLogLines = toWrite;
+                    }));
+                }
+            });
         }
 
         /// <summary>
@@ -497,13 +496,13 @@ namespace KeyboardChatterBlocker
                     Program.Blocker.SaveStatsToFile(false);
                 }
             }
-            if (ChatterLogRetryCountdown > 0)
+            if (ChatterLogSaveCountdown > 0)
             {
-                ChatterLogRetryCountdown--;
+                ChatterLogSaveCountdown--;
             }
-            else if (!SaveChatterLogToFile())
+            else
             {
-                ChatterLogRetryCountdown = 30; // File access holds up the keyboard hook, so wait 30 seconds rather than retrying a failing file (eg locked, or on a slow drive) every second
+                SaveChatterLogToFile();
             }
         }
 
@@ -917,7 +916,7 @@ namespace KeyboardChatterBlocker
             Program.Blocker.SaveChatterLog = SaveChatterLogCheckbox.Checked;
             if (!SaveChatterLogCheckbox.Checked)
             {
-                PendingChatterLogLines.Clear(); // Turning saving off means nothing more gets written, including lines still waiting on a failed write
+                PendingChatterLogLines.Clear();
             }
             Program.Blocker.SaveConfig();
         }
