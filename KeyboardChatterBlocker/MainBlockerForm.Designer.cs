@@ -493,6 +493,18 @@
             this.AddProgramTextBox.Enter += new System.EventHandler(this.AddProgramTextBox_Enter);
             this.AddProgramTextBox.Leave += new System.EventHandler(this.AddProgramTextBox_Leave);
             // 
+            // DisableOnFocusCheckbox
+            // 
+            this.DisableOnFocusCheckbox.AutoSize = true;
+            this.DisableOnFocusCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
+            this.DisableOnFocusCheckbox.Location = new System.Drawing.Point(8, 5);
+            this.DisableOnFocusCheckbox.Name = "DisableOnFocusCheckbox";
+            this.DisableOnFocusCheckbox.Size = new System.Drawing.Size(132, 17);
+            this.DisableOnFocusCheckbox.TabIndex = 7;
+            this.DisableOnFocusCheckbox.Text = "Disable only if focused";
+            this.DisableOnFocusCheckbox.UseVisualStyleBackColor = true;
+            this.DisableOnFocusCheckbox.CheckedChanged += new System.EventHandler(this.DisableOnFocusCheckbox_CheckedChanged);
+            // 
             // otherSettingsTabPage
             // 
             this.otherSettingsTabPage.Controls.Add(this.SaveChatterLogCheckbox);
@@ -675,17 +687,6 @@
             this.ExcludeInjectedCheckbox.Text = "Exclude Injected";
             this.ExcludeInjectedCheckbox.UseVisualStyleBackColor = true;
             this.ExcludeInjectedCheckbox.CheckedChanged += new System.EventHandler(this.ExcludeInjectedCheckbox_CheckedChanged);
-            // DisableOnFocusCheckbox
-            // 
-            this.DisableOnFocusCheckbox.AutoSize = true;
-            this.DisableOnFocusCheckbox.CheckAlign = System.Drawing.ContentAlignment.MiddleRight;
-            this.DisableOnFocusCheckbox.Location = new System.Drawing.Point(8, 5);
-            this.DisableOnFocusCheckbox.Name = "DisableOnFocusCheckbox";
-            this.DisableOnFocusCheckbox.Size = new System.Drawing.Size(132, 17);
-            this.DisableOnFocusCheckbox.TabIndex = 7;
-            this.DisableOnFocusCheckbox.Text = "Disable only if focused";
-            this.DisableOnFocusCheckbox.UseVisualStyleBackColor = true;
-            this.DisableOnFocusCheckbox.CheckedChanged += new System.EventHandler(this.DisableOnFocusCheckbox_CheckedChanged);
             // 
             // MainBlockerForm
             // 
