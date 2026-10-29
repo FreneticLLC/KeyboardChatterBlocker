@@ -19,7 +19,6 @@ namespace KeyboardChatterBlocker
     /// </summary>
     public partial class MainBlockerForm : Form
     {
-       
         /// <summary>
         /// Whether the form is still loading.
         /// </summary>
@@ -400,9 +399,7 @@ namespace KeyboardChatterBlocker
                 return;
             }
             bool any = false;
-
             IEnumerable<string> processes;
-
             if (Program.Blocker.DisableOnlyIfFocus)
             {
                 processes = new string[] { GetActiveProcessName().ToLowerInvariant() };
