@@ -122,7 +122,7 @@ namespace KeyboardChatterBlocker
         {
             DateTime now = DateTime.Now;
             bool wasScrolledToBottom = ChatterLogGrid.FirstDisplayedScrollingRowIndex + ChatterLogGrid.DisplayedRowCount(true) >= ChatterLogGrid.RowCount;
-            ChatterLogGrid.Rows.Add(now.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture), KeysHelper.Stringify(e.Key), e.Time, "[Edit]");
+            ChatterLogGrid.Rows.Add(now, KeysHelper.Stringify(e.Key), e.Time, "[Edit]");
             if (ChatterLogGrid.SortedColumn != null)
             {
                 ChatterLogGrid.Sort(ChatterLogGrid.SortedColumn, ChatterLogGrid.SortOrder == SortOrder.Ascending ? ListSortDirection.Ascending : ListSortDirection.Descending);
@@ -200,7 +200,7 @@ namespace KeyboardChatterBlocker
                 {
                     continue;
                 }
-                ChatterLogGrid.Rows.Add(time.ToString("MM/dd HH:mm:ss", CultureInfo.InvariantCulture), key.Stringify(), chatterTime, "[Edit]");
+                ChatterLogGrid.Rows.Add(time, key.Stringify(), chatterTime, "[Edit]");
             }
             if (ChatterLogGrid.RowCount > 0)
             {
