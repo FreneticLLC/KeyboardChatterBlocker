@@ -442,6 +442,7 @@ namespace KeyboardChatterBlocker
         /// <param name="shouldVerify">If true, the user directly triggered a save, and a failure should ask the user to check. If false, this is a background save.</param>
         public void SaveStatsToFile(bool shouldVerify)
         {
+            Program.Blocker.SaveStatsTicker = 0;
             StringBuilder output = new StringBuilder();
             foreach (KeyValuePair<Keys, int> keyData in StatsKeyCount.MainDictionary)
             {
