@@ -61,6 +61,7 @@
     <PostBuildEvent>$(SolutionDir)\..\signing\sign-kbc.bat</PostBuildEvent>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -75,6 +76,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AcceleratedKeyMap.cs" />
+    <Compile Include="CsvHelper.cs" />
     <Compile Include="FullScreenDetectHelper.cs" />
     <Compile Include="HotKeys.cs" />
     <Compile Include="KBCUtils.cs" />

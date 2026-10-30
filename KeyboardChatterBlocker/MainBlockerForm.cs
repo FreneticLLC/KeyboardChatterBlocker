@@ -129,9 +129,7 @@ namespace KeyboardChatterBlocker
             }
             if (Program.Blocker.SaveChatterLog)
             {
-                string keyText = KeysHelper.Stringify(e.Key);
-                keyText = keyText.Contains(",") ? $"\"{keyText}\"" : keyText;
-                PendingChatterLogLines.Add($"{now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)},{keyText},{e.Time}");
+                PendingChatterLogLines.Add(CsvHelper.CreateLine(now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture), KeysHelper.Stringify(e.Key), e.Time.ToString()));
             }
         }
 
@@ -155,22 +153,22 @@ namespace KeyboardChatterBlocker
         /// </summary>
         public void LoadChatterLogFromFile()
         {
-            string[] lines;
+            List<string[]> records;
             try
             {
-                lines = File.ReadAllLines(KeyBlocker.ChatterLogFilePath);
+                records = CsvHelper.ReadFile(KeyBlocker.ChatterLogFilePath).ToList();
             }
             catch (Exception)
             {
                 return;
             }
-            if (lines.Length > ChatterLogMaxLines)
+            if (records.Count > ChatterLogMaxLines)
             {
-                lines = lines.Skip(lines.Length - ChatterLogMaxLines).ToArray();
+                records = records.Skip(records.Count - ChatterLogMaxLines).ToList();
                 string tempPath = $"{KeyBlocker.ChatterLogFilePath}.tmp";
                 try
                 {
-                    File.WriteAllLines(tempPath, lines);
+                    File.WriteAllLines(tempPath, records.Select(record => CsvHelper.CreateLine(record)));
                     File.Replace(tempPath, KeyBlocker.ChatterLogFilePath, null);
                 }
                 catch (Exception)
@@ -188,16 +186,13 @@ namespace KeyboardChatterBlocker
                     }
                 }
             }
-            foreach (string line in lines.Skip(Math.Max(0, lines.Length - 500)))
+            foreach (string[] parts in records.Skip(Math.Max(0, records.Count - 500)))
             {
-                // TODO: csv parsing is a bit hacky here
-                int firstComma = line.IndexOf(',');
-                int lastComma = line.LastIndexOf(',');
-                if (firstComma == -1 || lastComma <= firstComma
-                    || !DateTime.TryParseExact(line.Substring(0, firstComma), "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time)
-                    || !KeysHelper.TryGetKey(line.Substring(firstComma + 1, lastComma - firstComma - 1).Trim('"'), out Keys key)
+                if (parts.Length != 3
+                    || !DateTime.TryParseExact(parts[0], "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime time)
+                    || !KeysHelper.TryGetKey(parts[1], out Keys key)
                     || (int)key < 0
-                    || !uint.TryParse(line.Substring(lastComma + 1), out uint chatterTime))
+                    || !uint.TryParse(parts[2], out uint chatterTime))
                 {
                     continue;
                 }

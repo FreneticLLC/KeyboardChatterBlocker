@@ -447,7 +447,7 @@ namespace KeyboardChatterBlocker
             foreach (KeyValuePair<Keys, int> keyData in StatsKeyCount.MainDictionary)
             {
                 int chatterTotal = StatsKeyChatter[keyData.Key];
-                output.Append($"{keyData.Key.Stringify()},{keyData.Value},{chatterTotal},\n");
+                output.Append(CsvHelper.CreateLine(keyData.Key.Stringify(), keyData.Value.ToString(), chatterTotal.ToString())).Append('\n');
             }
             try
             {
@@ -481,16 +481,10 @@ namespace KeyboardChatterBlocker
             {
                 return;
             }
-            string[] lines = File.ReadAllText(BlockerStatsFilePath).Replace('\r', '\n').Split('\n');
-            foreach (string line in lines)
+            foreach (string[] parts in CsvHelper.ReadFile(BlockerStatsFilePath))
             {
-                if (string.IsNullOrWhiteSpace(line))
-                {
-                    continue;
-                }
-                string[] parts = line.Split(',');
                 if (parts.Length < 3
-                    || !Enum.TryParse(parts[0], out Keys key)
+                    || !KeysHelper.TryGetKey(parts[0], out Keys key)
                     || !int.TryParse(parts[1], out int keyCount)
                     || !int.TryParse(parts[2], out int chatterTotal))
                 {
