@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using System.Runtime.InteropServices;
+using System.Diagnostics;
 using System.IO;
 
 namespace KeyboardChatterBlocker
@@ -24,11 +24,12 @@ namespace KeyboardChatterBlocker
         public static readonly string CONFIG_FILE = $"{ConfigFolder}/config.txt";
 
         /// <summary>
-        /// External Windows API call. Gets the current tick count as a 64-bit (ulong) value.
-        /// Similar to <see cref="Environment.TickCount"/> but less broken.
+        /// Gets the current monotonic time in milliseconds.
         /// </summary>
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto, SetLastError = true)]
-        public static extern ulong GetTickCount64();
+        private static ulong GetTimeMilliseconds()
+        {
+            return (ulong)(Stopwatch.GetTimestamp() * (1000.0 / Stopwatch.Frequency));
+        }
 
         /// <summary>
         /// The relevant <see cref="KeyboardInterceptor"/> instance.
@@ -337,12 +338,12 @@ namespace KeyboardChatterBlocker
         public List<string> AutoDisablePrograms = new List<string>();
 
         /// <summary>
-        /// A mapping of keys to the last press time.
+        /// A mapping of keys to the last press time, in milliseconds.
         /// </summary>
         public AcceleratedKeyMap<ulong> KeysToLastPressTime = new AcceleratedKeyMap<ulong>();
 
         /// <summary>
-        /// A mapping of keys to the last release time.
+        /// A mapping of keys to the last release time, in milliseconds.
         /// </summary>
         public AcceleratedKeyMap<ulong> KeysToLastReleaseTime = new AcceleratedKeyMap<ulong>();
 
@@ -522,7 +523,7 @@ namespace KeyboardChatterBlocker
             {
                 StatsKeyCount[key]++;
             }
-            ulong timeNow = GetTickCount64();
+            ulong timeNow = GetTimeMilliseconds();
             ulong timeLast = MeasureMode == MeasureFrom.Release ? KeysToLastReleaseTime[key] : KeysToLastPressTime[key];
             if (ShouldBlockAll)
             {
@@ -566,7 +567,7 @@ namespace KeyboardChatterBlocker
         /// <returns>True to allow the key-up, false to deny it.</returns>
         public bool AllowKeyUp(Keys key)
         {
-            ulong timeNow = GetTickCount64();
+            ulong timeNow = GetTimeMilliseconds();
             if (!IsEnabled || IsAutoDisabled || TempDisable) // Not enabled = allow everything through.
             {
                 KeysToLastReleaseTime[key] = timeNow;
