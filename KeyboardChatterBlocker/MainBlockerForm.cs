@@ -724,7 +724,7 @@ namespace KeyboardChatterBlocker
             {
                 return;
             }
-            if (!Enum.TryParse(ChatterLogGrid[1, e.RowIndex].Value.ToString(), true, out Keys key))
+            if (!KeysHelper.TryGetKey(ChatterLogGrid[1, e.RowIndex].Value.ToString(), out Keys key))
             {
                 MessageBox.Show("Error: chatter log grid misconfigured, invalid key name!", "Keyboard Chatter Blocker", MessageBoxButtons.OK);
                 return;
