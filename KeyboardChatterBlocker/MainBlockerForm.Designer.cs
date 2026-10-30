@@ -135,6 +135,7 @@
             // 
             // ChatterDelay
             // 
+            this.ChatterDelay.AutoSizeMode = System.Windows.Forms.DataGridViewAutoSizeColumnMode.Fill;
             this.ChatterDelay.HeaderText = "Chatter Delay (ms)";
             this.ChatterDelay.Name = "ChatterDelay";
             this.ChatterDelay.ReadOnly = true;
